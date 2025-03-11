@@ -135,7 +135,6 @@ exports.updateProfile = async (req, res) => {
       preferredCurrency: updatedUser.preferredCurrency
       
     })
-    res.status(200).json(updatedUser);
   } catch (error) {
     res.status(500).json({ message: 'Server error.', error: error.message });
   }
@@ -174,7 +173,7 @@ exports.changePassword = async (req, res) => {
 
 exports.logout = async (req, res) => {
   try {
-    res.cookie("token", "", {
+    res.cookie("authToken", "", {
       httpOnly: true,
       expires: new Date(0) // Expire the cookie immediately
     });

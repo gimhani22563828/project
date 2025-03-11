@@ -3,6 +3,7 @@ const router = express.Router();
 const budgetController = require('../controllers/budgetController');
 const { authenticate, authorizeResource } = require('../middleware/auth');
 
+router.use(express.json());
 // All routes require authentication
 router.use(authenticate);
 

@@ -36,8 +36,8 @@ exports.createBudget = async (req, res) => {
   }
 };
 
-// @desc    Get all budgets for the logged-in user
-// @route   GET /api/budgets
+// @desc    Get all budget for the logged-in user
+// @route   GET /api/budget
 // @access  Private
 exports.getBudgets = async (req, res) => {
   try {

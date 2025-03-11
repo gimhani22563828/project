@@ -1,127 +1,48 @@
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
-// @desc    Get all users (admin only)
-// @route   GET /api/users
-// @access  Private/Admin
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find({}).select('-password');
-    res.json(users);
+    res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ message: 'Server error.', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// @desc    Get user by ID (admin only)
-// @route   GET /api/users/:id
-// @access  Private/Admin
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    
-    res.json(user);
+    user ? res.json(user) : res.status(404).json({ message: 'User not found' });
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    res.status(500).json({ message: 'Server error.', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// @desc    Update user (admin only)
-// @route   PUT /api/users/:id
-// @access  Private/Admin
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, role, isActive, preferredCurrency } = req.body;
-    
-    const user = await User.findById(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    
-    // Update fields
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (role) user.role = role;
-    if (isActive !== undefined) user.isActive = isActive;
-    if (preferredCurrency) user.preferredCurrency = preferredCurrency;
-    
-    user.updatedAt = Date.now();
-    
-    const updatedUser = await user.save();
-    
-    res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      isActive: updatedUser.isActive,
-      preferredCurrency: updatedUser.preferredCurrency
-    });
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(user);
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    res.status(500).json({ message: 'Server error.', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// @desc    Delete user (admin only)
-// @route   DELETE /api/users/:id
-// @access  Private/Admin
 exports.deleteUser = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    
-    // Instead of deleting, deactivate the user
-    user.isActive = false;
-    user.updatedAt = Date.now();
-    
-    await user.save();
-    
-    res.json({ message: 'User deactivated.' });
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ message: 'User removed' });
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    res.status(500).json({ message: 'Server error.', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
-// @desc    Reset user password (admin only)
-// @route   PUT /api/users/:id/reset-password
-// @access  Private/Admin
 exports.resetPassword = async (req, res) => {
   try {
-    const { newPassword } = req.body;
-    
-    const user = await User.findById(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    
-    // Update password
-    user.password = newPassword;
-    user.updatedAt = Date.now();
-    
-    await user.save();
-    
-    res.json({ message: 'Password reset successfully.' });
+    const hashedPassword = await bcrypt.hash(req.body.newPassword, 10);
+    await User.findByIdAndUpdate(req.params.id, { password: hashedPassword });
+    res.json({ message: 'Password updated' });
   } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(404).json({ message: 'User not found.' });
-    }
-    res.status(500).json({ message: 'Server error.', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
